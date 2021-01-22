@@ -1,0 +1,78 @@
+#!/bin/bash
+
+clear
+echo "----------------------------------------------"
+echo "Brunel WiFi on Pi."
+echo "https://github.com/bencevans/brunel-wifi-on-pi"
+echo "----------------------------------------------"
+echo "WARNING: Don't just run things from the "
+echo "internet, check the script you've downloaded"
+echo "first."
+echo "----------------------------------------------"
+echo ""
+echo "Continue [Enter] Exit [Ctrl+C]"
+read
+clear
+echo "Step 1/2: Connect Portal"
+echo "----------------------------------------------"
+echo ""
+echo "Add your device on the Brunel Connect Portal at"
+echo "https://connect.brunel.ac.uk."
+echo ""
+echo "Ethernet Address(es):"
+cat /sys/class/net/eth*/address 2> /dev/null
+echo ""
+echo "Wireless Address(es):"
+cat /sys/class/net/wlan*/address 2> /dev/null
+echo ""
+echo "Continue [Enter] Exit [Ctrl+C]"
+read
+clear
+echo "Step 2/2: Setup Connection Profile"
+echo "----------------------------------------------"
+echo ""
+echo "We'll now setup the connection profile. Your"
+echo "domain login details are required to connect to"
+echo "Wifi@Brunel, hence asking for them. Please also"
+echo "be aware that these credentials are stored in"
+echo "plain text in the wpa_supplicant config."
+echo ""
+
+read -p "Brunel Login (e.g. cs64jam): " BRUNEL_USER
+read -s -p "Brunel Password (hidden): " BRUNEL_PASS
+
+echo ""
+echo ""
+echo "Stopping Network Services"
+
+sudo systemctl stop networking.service wpa_supplicant.service dhcpcd.service
+
+
+echo "Writing wpa_supplicant.conf"
+
+echo """
+network={
+    ssid=\"Wifi@Brunel\"
+    eap=PEAP
+    identity=\"${BRUNEL_USER}\"
+    password=\"${BRUNEL_PASS}\"
+    phase2=\"auth=MSCHAPV2\"
+    pairwise=CCMP TKIP
+    key_mgmt=WPA-EAP
+}
+
+""" | sudo tee -a /etc/wpa_supplicant/wpa_supplicant.conf > /dev/null
+
+echo "Writing dhcpd.conf"
+
+echo """
+interface wlan0
+env ifwireless=1
+env wpa_supplicant_driver=wext
+""" | sudo tee -a /etc/dhcpcd.conf > /dev/null
+
+echo "Starting Network Services"
+sudo systemctl start networking.service wpa_supplicant.service dhcpcd.service
+
+echo ""
+echo "Pi should now connect to Wifi@Brunel..."
