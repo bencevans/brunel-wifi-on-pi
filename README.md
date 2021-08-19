@@ -18,7 +18,7 @@ Tested on Raspberry Pi OS (32-bit) [Released: 2021-01-11].
    $ sudo systemctl stop networking.service wpa_supplicant.service dhcpcd.service
    ```
 
-3. Setup the econnection profile by adding the following to wpa_supplicant.conf and change 'cs00abc' to your network username and 'networkpassword' to your network password.
+3. Setup the connection profile by adding the following to wpa_supplicant.conf and change 'cs00abc' to your network username and 'networkpassword' to your network password.
 
    ```
    $ sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
